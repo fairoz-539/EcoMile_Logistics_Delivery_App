@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMile - Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        /* Custom animations and styles */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glow {
+            0% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.7); }
+            50% { box-shadow: 0 0 20px rgba(34, 197, 94, 1); }
+            100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.7); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+        }
+        .eco-points-circle {
+            background: radial-gradient(circle, #22c55e, #16a34a);
+            animation: pulse 2s infinite, glow 1.5s infinite;
+        }
+        /* Ensure consistent aspect ratio */
+        .header-section, .eco-points-section {
+            height: 12rem; /* Fixed height for consistent aspect ratio */
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+    <!-- Modern Navigation Bar -->
+    <nav class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold flex items-center tracking-tight">
+                <i class="fas fa-truck mr-2"></i> EcoMile
+            </h1>
+            <div class="space-x-6">
+                <a href="{{ url_for('auth_index') }}" class="hover:text-indigo-200 transition duration-300">Home</a>
+                <a href="{{ url_for('collaboration_hub') }}" class="hover:text-indigo-200 transition duration-300">Collaboration Hub</a>
+                <a href="{{ url_for('logout') }}" class="hover:text-indigo-200 transition duration-300">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6 max-w-7xl">
+        <!-- Header and EcoPoints Row -->
+        <div class="flex flex-col md:flex-row gap-6 mb-8">
+            <!-- Dashboard Title (Left Half) -->
+            <div class="md:w-1/2 header-section flex items-center justify-start p-6 w-10 h-10 ">
+                <h1 class="text-4xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-tachometer-alt mr-3 text-indigo-600"></i> Dashboard
+                </h1>
+            </div>
+
+            <!-- Crazy EcoPoints Section (Right Half) -->
+            <div class="md:w-1/2 eco-points-section bg-gradient-to-br from-green-400 w-10 h-10 via-teal-500 to-blue-500 p-6 rounded-2xl shadow-2xl animate-fade-in flex items-center justify-center relative">
+                <div class="eco-points-circle w-20 h-20 rounded-full flex items-center justify-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-opacity-20 bg-black"></div>
+                    <p class="text-3xl font-extrabold text-white z-10 transform -rotate-6">
+                        <span id="eco-points">{{ points or 0 }}</span>
+                    </p>
+                </div>
+                <div class="ml-4 text-white">
+                    <h2 class="text-2xl font-bold tracking-wide drop-shadow-lg flex items-center">
+                        <i class="fas fa-star animate-spin text-yellow-300 mr-2"></i> EcoPoints
+                    </h2>
+                    <p class="text-md italic font-medium">Green Rockstar!</p>
+                </div>
+                <!-- Floating Leaf Icon -->
+                <i class="fas fa-leaf text-green-300 text-4xl absolute top-3 right-3 opacity-75 animate-bounce"></i>
+            </div>
+        </div>
+
+        <!-- Collaboration Requests Section -->
+        <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in">
+            <h2 class="text-2xl font-semibold text-gray-800 mb-6 flex items-center">
+                <i class="fas fa-handshake mr-2 text-blue-500"></i> Collaboration Requests
+            </h2>
+            {% if requests %}
+                <div class="grid gap-6">
+                    {% for req in requests %}
+                        <div class="p-5 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition duration-300">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Competitor:</strong></p>
+                                    <p class="text-gray-800">{{ req.competitor_id }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Goods:</strong></p>
+                                    <p class="text-gray-800">{{ req.goods | join(', ') }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Service:</strong></p>
+                                    <p class="text-gray-800">{{ req.services }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Routes:</strong></p>
+                                    <p class="text-gray-800">{{ req.routes }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Your Cost:</strong></p>
+                                    <p class="text-gray-800">${{ req.cost_sharing.user_cost | round(2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Competitor's Cost:</strong></p>
+                                    <p class="text-gray-800">${{ req.cost_sharing.competitor_cost | round(2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Total Savings:</strong></p>
+                                    <p class="text-gray-800">${{ req.cost_sharing.total_savings | round(2) }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Status:</strong></p>
+                                    <p class="text-gray-800 {{ 'text-green-600' if req.status == 'Accepted' else 'text-yellow-600' if req.status == 'Pending' else 'text-red-600' }}">
+                                        {{ req.status }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-sm text-gray-600"><strong>Sent On:</strong></p>
+                                    <p class="text-gray-800">{{ req.created_at }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-gray-600 italic">No collaboration requests sent yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

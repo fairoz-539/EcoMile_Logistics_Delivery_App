@@ -1,0 +1,307 @@
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f3f4f6;
+    color: #1f2937;
+    line-height: 1.6;
+}
+
+/* Map Styles */
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 0.375rem;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 0; /* Ensure map is below modals */
+}
+
+.custom-marker {
+    background: red;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+/* Modal Styles */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000; /* Higher than map's z-index */
+}
+
+.modal:not(.hidden) {
+    display: flex; /* Show modal when not hidden */
+}
+
+.modal-content {
+    background-color: white;
+    margin: 15% auto;
+    padding: 20px;
+    width: 70%;
+    max-width: 500px;
+    border-radius: 0.375rem;
+    text-align: center;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    position: relative;
+}
+
+.modal h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #1f2937;
+}
+
+.modal p {
+    font-size: 1rem;
+    color: #4b5563;
+    margin-bottom: 1.5rem;
+}
+
+/* Modal Buttons */
+.modal button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+.modal button:hover {
+    opacity: 0.9;
+}
+
+#competitor-ok,
+#notify-ok,
+#collaboration-proceed {
+    background-color: #10b981; /* Green-600 */
+    color: white;
+    margin-right: 0.5rem;
+}
+
+#competitor-skip,
+#notify-skip,
+#collaboration-cancel {
+    background-color: #6b7280; /* Gray-600 */
+    color: white;
+}
+
+
+
+#collaboration-close,
+#chat-close {
+    background-color: #ef4444; /* Red-600 */
+    color: white;
+    margin-top: 0.5rem;
+}
+
+/* Navigation */
+nav {
+    background-color: #2563eb; /* Blue-600 */
+    padding: 1rem;
+}
+
+nav h1 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Main Content */
+main {
+    padding: 1rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+/* Form Styles */
+.bg-white {
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+label {
+    display: block;
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 0.5rem;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 0.5rem;
+    background-color: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 0.375rem;
+    outline: none;
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+input[type="text"]:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+button {
+    padding: 0.75rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    transition: background-color 0.3s;
+    border: none;
+    cursor: pointer;
+}
+
+#add-address {
+    background-color: #2563eb; /* Blue-600 */
+    color: white;
+}
+
+#add-address:hover {
+    background-color: #1d4ed8; /* Blue-700 */
+}
+
+#launch-btn {
+    background-color: #10b981; /* Green-600 */
+    color: white;
+    width: 100%;
+    display: block;
+    margin-top: 0.5rem;
+}
+
+#launch-btn:hover {
+    background-color: #059669; /* Green-700 */
+}
+
+#launch-btn:disabled {
+    background-color: #d1d5db; /* Gray-400 */
+    cursor: not-allowed;
+}
+
+#voice-btn {
+    background-color: #2563eb; /* Blue-600 */
+    color: white;
+}
+
+#voice-btn:hover {
+    background-color: #1d4ed8; /* Blue-700 */
+}
+
+#voice-loading,
+#voice-status {
+    font-size: 0.875rem;
+}
+
+#error-message {
+    color: #dc2626; /* Red-600 */
+    padding: 0.5rem;
+}
+
+/* Analytics */
+#analytics {
+    padding: 1.5rem;
+    border-radius: 0.375rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#analytics p {
+    margin-bottom: 0.5rem;
+    font-size: 0.875rem;
+    color: #4b5563;
+}
+
+#analytics span {
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Alerts */
+#traffic-alert,
+#safety-alert {
+    padding: 1rem;
+    border-left-width: 4px;
+    border-radius: 0.375rem;
+    margin-top: 1rem;
+}
+
+#traffic-alert {
+    background-color: #fee2e2;
+    border-left-color: #dc2626; /* Red-500 */
+    color: #dc2626;
+}
+
+#safety-alert {
+    background-color: #fefcbf;
+    border-left-color: #f59e0b; /* Yellow-500 */
+    color: #f59e0b;
+}
+
+#reroute-btn {
+    color: #3b82f6; /* Blue-500 */
+    text-decoration: underline;
+}
+
+#reroute-btn:hover {
+    color: #2563eb; /* Blue-600 */
+}
+
+/* Address List */
+.address-entry {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.address-entry .flex {
+    display: flex;
+    align-items: center;
+}
+
+.remove-address {
+    background-color: #dc2626; /* Red-600 */
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+}
+
+.remove-address:hover {
+    background-color: #b91c1c; /* Red-700 */
+}
+
+/* Voice Section */
+#voice-section {
+    align-items: center;
+    margin-top: 1rem;
+}
+

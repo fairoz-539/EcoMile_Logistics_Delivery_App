@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoMile - Collaboration Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        /* Custom Styles */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans antialiased">
+    <!-- Navigation -->
+    <nav class="bg-blue-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-extrabold flex items-center tracking-tight">
+                <i class="fas fa-truck mr-2"></i> EcoMile
+            </h1>
+            <div class="space-x-6">
+                <a href="{{ url_for('auth_index') }}" class="hover:text-gray-200 transition duration-300">Home</a>
+                <a href="{{ url_for('auth_dashboard') }}" class="hover:text-gray-200 transition duration-300">Dashboard</a>
+                <a href="{{ url_for('logout') }}" class="hover:text-gray-200 transition duration-300">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto p-6 max-w-7xl">
+        <h1 class="text-4xl font-bold text-blue-600 mb-8 flex items-center animate-fade-in">
+            <i class="fas fa-handshake mr-3"></i> Collaboration Hub
+        </h1>
+
+        <!-- Layout -->
+        <!-- First Line: Goods, Service, Route -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- Goods Card -->
+            <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Goods to Deliver</h2>
+                <div id="goods-tags" class="flex flex-wrap gap-2">
+                    <button class="tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-600 hover:text-white transition duration-300" data-value="Electronics">Electronics</button>
+                    <button class="tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-600 hover:text-white transition duration-300" data-value="Groceries">Groceries</button>
+                    <button class="tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-600 hover:text-white transition duration-300" data-value="Clothing">Clothing</button>
+                    <button class="tag px-3 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-blue-600 hover:text-white transition duration-300" data-value="Furniture">Furniture</button>
+                </div>
+            </div>
+
+            <!-- Service Card -->
+            <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Service Details</h2>
+                <select id="services" class="w-full p-2 bg-gray-100 text-gray-600 rounded-md focus:ring-2 focus:ring-blue-600 transition duration-300">
+                    <option value="">Select a service</option>
+                    <option value="Same-Day">Same-Day Delivery</option>
+                    <option value="Scheduled">Scheduled Delivery</option>
+                    <option value="Express">Express Delivery</option>
+                </select>
+            </div>
+
+            <!-- Route Card -->
+            <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Routes to Share</h2>
+                <textarea id="routes" class="w-full p-2 bg-gray-100 text-gray-600 rounded-md focus:ring-2 focus:ring-blue-600 transition duration-300" placeholder="Enter route details or leave as is"></textarea>
+            </div>
+        </div>
+
+        <!-- Second Line: Cost Sharing, Map -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <!-- Cost Sharing Card -->
+            <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in md:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Cost Sharing</h2>
+                <div id="cost-sharing" class="space-y-3 text-gray-700">
+                    <p><strong>Your Cost:</strong> <span id="user-cost" class="font-medium text-blue-600">$0</span></p>
+                    <p><strong>Competitor's Cost:</strong> <span id="competitor-cost" class="font-medium text-blue-600">$0</span></p>
+                    <p><strong>Total Savings:</strong> <span id="total-savings" class="font-medium text-green-600">$0</span></p>
+                </div>
+            </div>
+
+            <!-- Map (Spans 2/3 width, continues to third line) -->
+            <div class="md:col-span-2 bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in h-full">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">Shared Route Suggestion</h2>
+                <div id="overlap-map" class="h-72 rounded-lg border border-gray-200 shadow-inner z-0"></div>
+                <p class="mt-3 text-gray-700"><strong>Overlap Distance:</strong> <span id="overlap-distance" class="font-medium">0 km</span></p>
+            </div>
+        </div>
+
+        <!-- Third Line: EcoPoints, Map (continued), Buttons -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- EcoPoints Card -->
+            <div class="bg-white p-6 rounded-xl shadow-md card-hover transition duration-300 animate-fade-in md:col-span-1">
+                <h2 class="text-xl font-semibold text-gray-800 mb-4">EcoPoints Leaderboard</h2>
+                <ul class="text-md text-gray-700">You have <span class="font-bold text-blue-600" id="eco-points">{{ points or 0 }}</span> EcoPoints</ul>
+            </div>
+
+            <!-- Map (continued) and Buttons -->
+            <div class="md:col-span-2 flex flex-col gap-6">
+                <!-- Buttons (below Map) -->
+                <div class="flex justify-center items-center space-x-4 animate-fade-in p-10">
+                    <button id="chat-btn" class="w-1/2 py-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300 shadow-md">
+                        <i class="fas fa-comments mr-2"></i> Chat with Competitor
+                    </button>
+                    <button id="send-offer" class="w-1/2 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition duration-300 shadow-md">
+                        <i class="fas fa-paper-plane mr-2"></i> Send Offer
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-md relative">
+            <button id="chat-close" class="absolute top-3 right-3 text-gray-500 hover:text-gray-700 transition duration-300">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Chat with Competitor</h2>
+            <div id="chat-messages" class="h-64 overflow-y-auto border border-gray-200 p-4 rounded-md mb-4 bg-gray-50"></div>
+            <div class="flex space-x-3">
+                <input type="text" id="chat-input" class="flex-1 p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-600 transition duration-300" placeholder="Type your message...">
+                <button id="chat-send" class="px-4 py-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition duration-300">
+                    <i class="fas fa-paper-plane"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-6 rounded-xl shadow-2xl">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Confirm Collaboration Offer</h2>
+            <p class="mb-4 text-gray-600">Review the details below:</p>
+            <div id="confirmation-details" class="space-y-2 mb-4 text-gray-700">
+                <p><strong>Goods:</strong> <span id="confirm-goods"></span></p>
+                <p><strong>Service:</strong> <span id="confirm-service"></span></p>
+                <p><strong>Routes:</strong> <span id="confirm-routes"></span></p>
+                <p><strong>Your Cost:</strong> <span id="confirm-user-cost"></span></p>
+                <p><strong>Competitor's Cost:</strong> <span id="confirm-competitor-cost"></span></p>
+                <p><strong>Total Savings:</strong> <span id="confirm-total-savings"></span></p>
+            </div>
+            <div class="flex space-x-4">
+                <button id="confirm-proceed" class="px-4 py-2 bg-green-600 text-white rounded-full hover:bg-green-700 transition duration-300">
+                    <i class="fas fa-check mr-2"></i> Proceed
+                </button>
+                <button id="confirm-cancel" class="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-500 transition duration-300">
+                    <i class="fas fa-times mr-2"></i> Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js"></script>
+    <script src="{{ url_for('static', filename='firebase-config.js') }}"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Global variables
+        const routeData = {{ route_data | tojson | safe }};
+        const competitorData = {{ competitor_data | tojson | safe }};
+        let overlapMap = null;
+        let collaborationId = null;
+        const selectedGoods = [];
+
+        // Initialize map
+        function initOverlapMap() {
+            overlapMap = L.map('overlap-map').setView([13.0827, 80.2707], 11); // Chennai default
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            }).addTo(overlapMap);
+            if (routeData && routeData.geometry && routeData.geometry.length) {
+                const userLatlngs = routeData.geometry.map(coord => [coord[1], coord[0]]);
+                L.polyline(userLatlngs, { color: 'red', weight: 4 }).addTo(overlapMap);
+                overlapMap.fitBounds(userLatlngs);
+            } else {
+                const defaultCompLatlngs = competitorData.competitor_1.geometry.map(coord => [coord[1], coord[0]]);
+                L.polyline(defaultCompLatlngs, { color: 'blue', weight: 4 }).addTo(overlapMap);
+            }
+        }
+
+        // Mock cost calculation
+        function calculateMockCosts() {
+            const service = document.getElementById('services').value || '';
+            const totalDistance = routeData && routeData.total_distance ? routeData.total_distance : 10; // Default 10 km
+            const serviceMultipliers = { 'Same-Day': 1.2, 'Scheduled': 1.0, 'Express': 1.5 };
+            const goodsMultipliers = { 'Electronics': 1.1, 'Groceries': 1.0, 'Clothing': 0.9, 'Furniture': 1.3 };
+            const fuelPrice = 5.0; // $ per liter
+            const fuelConsumption = totalDistance * 0.14; // liters
+            let baseCost = fuelConsumption * fuelPrice;
+
+            let serviceCost = baseCost * (serviceMultipliers[service] || 1.0);
+            let goodsCost = selectedGoods.length > 0 ? 
+                selectedGoods.reduce((sum, g) => sum + (goodsMultipliers[g] || 1.0), 0) / selectedGoods.length : 1.0;
+            let totalCost = serviceCost * goodsCost;
+            let userCost = totalCost * 0.5;
+            let competitorCost = totalCost * 0.5;
+            let totalSavings = totalCost * 0.3;
+
+            document.getElementById('user-cost').textContent = `$${userCost.toFixed(2)}`;
+            document.getElementById('competitor-cost').textContent = `$${competitorCost.toFixed(2)}`;
+            document.getElementById('total-savings').textContent = `$${totalSavings.toFixed(2)}`;
+            document.getElementById('overlap-distance').textContent = `${(totalDistance * 0.5).toFixed(1)} km`;
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.tag').forEach(tag => {
+                tag.addEventListener('click', () => {
+                    const value = tag.getAttribute('data-value');
+                    if (selectedGoods.includes(value)) {
+                        selectedGoods.splice(selectedGoods.indexOf(value), 1);
+                        tag.classList.remove('bg-blue-600', 'text-white');
+                    } else {
+                        selectedGoods.push(value);
+                        tag.classList.add('bg-blue-600', 'text-white');
+                    }
+                    calculateMockCosts();
+                });
+            });
+
+            document.getElementById('services').addEventListener('change', calculateMockCosts);
+
+            if (routeData && routeData.addresses) {
+                document.getElementById('routes').placeholder = routeData.addresses.join(', ');
+            }
+
+            document.getElementById('send-offer').addEventListener('click', () => {
+                const services = document.getElementById('services').value;
+                const routes = document.getElementById('routes').value || (routeData ? routeData.addresses.join(', ') : 'Default Route');
+                if (selectedGoods.length === 0 || !services) {
+                    alert('Please select goods and a service type.');
+                    return;
+                }
+                document.getElementById('confirm-goods').textContent = selectedGoods.join(', ');
+                document.getElementById('confirm-service').textContent = services;
+                document.getElementById('confirm-routes').textContent = routes;
+                document.getElementById('confirm-user-cost').textContent = document.getElementById('user-cost').textContent;
+                document.getElementById('confirm-competitor-cost').textContent = document.getElementById('competitor-cost').textContent;
+                document.getElementById('confirm-total-savings').textContent = document.getElementById('total-savings').textContent;
+                document.getElementById('confirmation-modal').classList.remove('hidden');
+            });
+
+            document.getElementById('confirm-proceed').addEventListener('click', () => {
+                const services = document.getElementById('services').value;
+                const routes = document.getElementById('routes').value || (routeData ? routeData.addresses.join(', ') : 'Default Route');
+                const userCost = parseFloat(document.getElementById('user-cost').textContent.replace('$', ''));
+                const competitorCost = parseFloat(document.getElementById('competitor-cost').textContent.replace('$', ''));
+                const totalSavings = parseFloat(document.getElementById('total-savings').textContent.replace('$', ''));
+
+                if (typeof firebase === 'undefined') {
+                    console.error('Firebase is not defined. Using mock token for testing.');
+                    submitCollaboration('mock-token', services, routes, userCost, competitorCost, totalSavings);
+                } else {
+                    firebase.auth().onAuthStateChanged(user => {
+                        if (user) {
+                            user.getIdToken(true).then(idToken => {
+                                submitCollaboration(idToken, services, routes, userCost, competitorCost, totalSavings);
+                            }).catch(error => {
+                                console.error('Error getting ID token:', error);
+                                alert('Authentication error. Please log in again.');
+                            });
+                        } else {
+                            console.error('No authenticated user found.');
+                            alert('Please log in to proceed.');
+                        }
+                    });
+                }
+            });
+
+            function submitCollaboration(idToken, services, routes, userCost, competitorCost, totalSavings) {
+                fetch('/submit_collaboration', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                    body: JSON.stringify({
+                        goods: selectedGoods,
+                        services: services,
+                        routes: routes,
+                        competitor_id: 'competitor_1',
+                        cost_sharing: {
+                            user_cost: userCost,
+                            competitor_cost: competitorCost,
+                            total_savings: totalSavings
+                        }
+                    }),
+                    credentials: 'include'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Submit collaboration response:', data);
+                    collaborationId = data.collaboration_id;
+                    alert(data.message);
+                    document.getElementById('confirmation-modal').classList.add('hidden');
+                    fetchLeaderboard();
+                })
+                .catch(error => {
+                    console.error('Error submitting collaboration:', error);
+                    alert('Failed to submit collaboration offer. Please try again.');
+                });
+            }
+
+            document.getElementById('confirm-cancel').addEventListener('click', () => {
+                document.getElementById('confirmation-modal').classList.add('hidden');
+            });
+
+            document.getElementById('chat-btn').addEventListener('click', () => {
+                if (!collaborationId) {
+                    alert('Please send the offer first to start chatting.');
+                    return;
+                }
+                document.getElementById('chat-modal').classList.remove('hidden');
+                fetchChatMessages();
+            });
+
+            document.getElementById('chat-close').addEventListener('click', () => {
+                document.getElementById('chat-modal').classList.add('hidden');
+            });
+
+            document.getElementById('chat-send').addEventListener('click', () => {
+                const message = document.getElementById('chat-input').value;
+                if (!message) return;
+                if (typeof firebase === 'undefined') {
+                    alert('Firebase not loaded. Chat unavailable.');
+                    return;
+                }
+                firebase.auth().currentUser.getIdToken(true).then(idToken => {
+                    fetch(`/send_chat_message/${collaborationId}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+                        body: JSON.stringify({ message }),
+                        credentials: 'include'
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Failed to send message');
+                        return response.json();
+                    })
+                    .then(() => {
+                        document.getElementById('chat-input').value = '';
+                        fetchChatMessages();
+                    })
+                    .catch(error => {
+                        console.error('Error sending chat message:', error);
+                        alert('Failed to send chat message.');
+                    });
+                });
+            });
+
+            initOverlapMap();
+            calculateMockCosts();
+            fetchLeaderboard();
+        });
+
+        function fetchChatMessages() {
+            if (typeof firebase === 'undefined') {
+                alert('Firebase not loaded. Chat unavailable.');
+                return;
+            }
+            firebase.auth().currentUser.getIdToken(true).then(idToken => {
+                fetch(`/get_chat_messages/${collaborationId}`, {
+                    headers: { 'Authorization': `Bearer ${idToken}` },
+                    credentials: 'include'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch messages');
+                    return response.json();
+                })
+                .then(data => {
+                    const chatMessages = document.getElementById('chat-messages');
+                    chatMessages.innerHTML = '';
+                    data.messages.forEach(msg => {
+                        const div = document.createElement('div');
+                        div.className = `p-2 ${msg.sender === '{{ session["user"]["email"] }}' ? 'text-right' : 'text-left'}`;
+                        div.innerHTML = `<strong>${msg.sender}:</strong> ${msg.message} <span class="text-xs text-gray-500">(${msg.created_at})</span>`;
+                        chatMessages.appendChild(div);
+                    });
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                })
+                .catch(error => {
+                    console.error('Error fetching chat messages:', error);
+                    alert('Failed to load chat messages.');
+                });
+            });
+        }
+
+        function fetchLeaderboard() {
+            if (typeof firebase === 'undefined') {
+                console.log('Firebase not loaded. Skipping leaderboard fetch.');
+                return;
+            }
+            firebase.auth().currentUser.getIdToken(true).then(idToken => {
+                fetch('/leaderboard', {
+                    headers: { 'Authorization': `Bearer ${idToken}` },
+                    credentials: 'include'
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to fetch leaderboard');
+                    return response.json();
+                })
+                .then(data => {
+                    const leaderboard = document.getElementById('leaderboard');
+                    leaderboard.innerHTML = '';
+                    data.leaderboard.forEach(entry => {
+                        const li = document.createElement('li');
+                        li.className = 'flex justify-between p-2 bg-gray-100 rounded-md';
+                        li.innerHTML = `<span>${entry.user}</span><span>${entry.points} EcoPoints</span>`;
+                        leaderboard.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching leaderboard:', error);
+                    alert('Failed to load leaderboard.');
+                });
+            }).catch(error => {
+                console.error('Error getting ID token for leaderboard:', error);
+            });
+        }
+    </script>
+</body>
+</html>
